@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guest List Tinder</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f8f9fa; margin: 0; }
+        #app-container { background: white; padding: 2rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 320px; }
+        .name-card { font-size: 1.8rem; font-weight: bold; margin: 30px 0; min-height: 80px; display: flex; align-items: center; justify-content: center; color: #333; }
+        .buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        button { border: none; padding: 18px 5px; border-radius: 12px; cursor: pointer; color: white; font-weight: bold; font-size: 0.9rem; }
+        .yes { background: #2ecc71; } .maybe { background: #f1c40f; } .no { background: #e74c3c; }
+        .undo-btn { background: #bdc3c7; width: 100%; padding: 10px; color: #2c3e50; font-size: 0.8rem; }
+        textarea { width: 90%; height: 200px; border-radius: 15px; padding: 15px; border: 2px solid #ddd; font-size: 1rem; }
+        .hidden { display: none; }
+        #progress { color: #95a5a6; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div id="setup">
+        <h2 style="color: #2c3e50;">Invite List Sorter</h2>
+        <textarea id="inputList" placeholder="Paste names here...&#10;John Smith&#10;Jane Doe"></textarea><br><br>
+        <button class="yes" onclick="startGame()" style="width:100%; font-size: 1.1rem;">Start Sorting</button>
+    </div>
+
+    <div id="app-container" class="hidden">
+        <div id="progress">0 / 0</div>
+        <div class="name-card" id="currentName">Name</div>
+        <div class="buttons">
+            <button class="no" onclick="decide('No')">No</button>
+            <button class="maybe" onclick="decide('Maybe')">Maybe</button>
+            <button class="yes" onclick="decide('Yes')">Yes</button>
+        </div>
+        <button class="undo-btn" onclick="undo()">⬅ Undo Last Action</button>
+        <br><br>
+        <button onclick="downloadCSV()" style="background:none; color:#3498db; text-decoration:underline; font-size:0.8rem;">Finish & Export Now</button>
+    </div>
+
+    <script>
+        let items = [];
+        let results = [];
+        let index = 0;
+
+        function startGame() {
+            const text = document.getElementById('inputList').value;
+            items = text.split('\n').map(n => n.trim()).filter(n => n !== "");
+            if (items.length === 0) return alert("Paste names first!");
+            
+            document.getElementById('setup').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            showNext();
+        }
+
+        function showNext() {
+            if (index < items.length) {
+                document.getElementById('currentName').innerText = items[index];
+                document.getElementById('progress').innerText = `Guest ${index + 1} of ${items.length}`;
+            } else {
+                alert("That's everyone!");
+                downloadCSV();
+            }
+        }
+
+        function decide(status) {
+            results.push({ name: items[index], status: status });
+            index++;
+            showNext();
+        }
+
+        function undo() {
+            if (index > 0) {
+                index--; // Go back one
+                results.pop(); // Remove last result
+                showNext();
+            } else {
+                alert("Nothing to undo!");
+            }
+        }
+
+        function downloadCSV() {
+            if (results.length === 0) return alert("No decisions made yet!");
+            let csv = "Name,Decision\n" + results.map(r => `"${r.name}","${r.status}"`).join("\n");
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'party_guest_list.csv';
+            a.click();
+        }
+    </script>
+</body>
+</html>
