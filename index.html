@@ -220,28 +220,33 @@ Jane Doe"></textarea>
         URL.revokeObjectURL(url);
     }
 
-    function parseVCardNames(vcardText) {
-        const names = [];
-        const lines = vcardText.split(/\r?\n/);
+function parseVCardNames(vcardText) {
+    const names = [];
+    const cards = vcardText.split("BEGIN:VCARD");
 
-        for (let line of lines) {
-            // Preferred formatted name
-            if (line.startsWith("FN:")) {
-                names.push(line.substring(3).trim());
-            }
-            // Fallback structured name: N:Last;First;;;
-            else if (line.startsWith("N:")) {
-                const parts = line.substring(2).split(";");
-                const first = parts[1] || "";
-                const last = parts[0] || "";
-                const fullName = `${first} ${last}`.trim();
-                if (fullName) names.push(fullName);
-            }
+    for (let card of cards) {
+        if (!card.trim()) continue;
+
+        let fnMatch = card.match(/^FN:(.+)$/m);
+        if (fnMatch) {
+            names.push(fnMatch[1].trim());
+            continue; // don't also parse N:
         }
 
-        return names;
+        let nMatch = card.match(/^N:(.+)$/m);
+        if (nMatch) {
+            const parts = nMatch[1].split(";");
+            const first = parts[1] || "";
+            const last = parts[0] || "";
+            const fullName = `${first} ${last}`.trim();
+            if (fullName) names.push(fullName);
+        }
     }
+
+    return names;
+}
 </script>
+
 
 </body>
 </html>
